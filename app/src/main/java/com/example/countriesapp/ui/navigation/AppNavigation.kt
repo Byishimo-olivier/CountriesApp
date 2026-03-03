@@ -1,5 +1,6 @@
 package com.example.countriesapp.ui.navigation
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -28,6 +29,7 @@ sealed class Screen(val route: String, val label: String, val icon: @Composable 
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -59,22 +61,40 @@ fun AppNavigation() {
             }
         }
     ) { innerPadding ->
-        NavHost(navController, startDestination = Screen.Home.route, modifier = Modifier.padding(innerPadding)) {
-            composable(Screen.Home.route) {
-                HomeScreen(onCountryClick = { cca2 ->
-                    navController.navigate(Screen.Detail.createRoute(cca2))
-                })
-            }
-            composable(Screen.Favorites.route) {
-                FavoritesScreen(onCountryClick = { cca2 ->
-                    navController.navigate(Screen.Detail.createRoute(cca2))
-                })
-            }
-            composable(
-                Screen.Detail.route,
-                arguments = listOf(navArgument("cca2") { type = NavType.StringType })
+        SharedTransitionLayout {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Home.route,
+                modifier = Modifier.padding(innerPadding)
             ) {
-                DetailScreen(onBackClick = { navController.popBackStack() })
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        onCountryClick = { cca2 ->
+                            navController.navigate(Screen.Detail.createRoute(cca2))
+                        },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable
+                    )
+                }
+                composable(Screen.Favorites.route) {
+                    FavoritesScreen(
+                        onCountryClick = { cca2 ->
+                            navController.navigate(Screen.Detail.createRoute(cca2))
+                        },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable
+                    )
+                }
+                composable(
+                    Screen.Detail.route,
+                    arguments = listOf(navArgument("cca2") { type = NavType.StringType })
+                ) {
+                    DetailScreen(
+                        onBackClick = { navController.popBackStack() },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable
+                    )
+                }
             }
         }
     }
